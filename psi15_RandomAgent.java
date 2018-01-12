@@ -62,25 +62,26 @@ private int myPay;
 			
 			ACLMessage acl = blockingReceive();
 			String message = acl.getContent();
-			
+			//System.out.println("RANDOM MESSAGE: "+ message);
 			if (message.startsWith("Id#")){
 				ID = Integer.parseInt(message.split("#")[1]);
 				
                                                        }
-                                                       if(message.startsWith("GetCoins#")){
+                   
+                                                      else if(message.startsWith("GetCoins#")||message.contains("Get")){
                                                            
                                                            //GetCoins#[IDS]#Turno
                                                             order = message.split("#")[1];
                                                             IDs = order.split(",");
                                                             turn = Integer.parseInt(message.split("#")[2]);
-                                                            
+                                                            //System.out.println("IDS LENGTH RANDOM ////////////////////////////////// = "+IDs.length+ "CONTENT: "+ Arrays.toString(IDs));
                                                             //Enviamos nuestras monedas
                                                             mycoins = giveCoins();
-                                                            System.out.println("GIVECOINS:"+mycoins);
+                                                           // System.out.println("GIVECOINS:"+mycoins);
                                                             String auxMes = "MyCoins#" + mycoins;
                                                             sendReply(acl, auxMes);
                                                        }
-                                                      if(message.startsWith("GuessCoins#")){
+                                                     else if(message.startsWith("GuessCoins#")){
                                                             if(message.equals("GuessCoins#")){
                                                               mybet = calculatebet();
                                                               // System.out.println("RANDOMBET:"+mybet); FOR DEBUGGING
@@ -98,10 +99,13 @@ private int myPay;
                                                           sendReply(acl, auxMes);
                                                           }
                                                           
-                                                      }if(message.startsWith("Result#")){
+                                                      }else if(message.startsWith("Result#")){
                                                           
                                                           //TODO: Comprobar ganadores (Done in main)
                                                          
+                                                      }
+                                                      else{
+                                                          System.out.println("MENSAJE DESCONOCIDO"+ message);
                                                       }
                 }
 
@@ -141,7 +145,7 @@ public int calculatebet(){
     while(true){ 
          Random randomGenerator = new Random();
          int randomInt = mycoins + randomGenerator.nextInt(IDs.length*2);
-         
+       //  System.out.println("IDS LENGTH RANDOM ////////////////////////////////// = "+IDs.length+ "CONTENT: "+ Arrays.toString(IDs));
         
          
         if(bets == null){

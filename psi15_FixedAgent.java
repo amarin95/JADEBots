@@ -87,7 +87,7 @@ private int myPay;
                                                           if(message.equals("GuessCoins#")){
                                                               mybet = calculatebet();
                                                               
-                                                              System.out.println("PUTAMIERDA");
+                                                              
                                                               String auxMes="MyBet#"+mybet;
                                                               sendReply(acl, auxMes);
                                                           }else{

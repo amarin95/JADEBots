@@ -32,6 +32,7 @@ public class psi15_mainAgent extends Agent {
     int resultado, draw, played;
     psi15_Player winner;
     int numerodepartidas;
+    int initnumerodepartidas;
 
     protected void setup() {
 
@@ -123,14 +124,15 @@ public class psi15_mainAgent extends Agent {
         //lisfOfPlayers = list of the players that are playing, removing the winners.
         @Override
         public void action() {
-
+            
             while (true) {//Always until close
+               
                 System.out.println("Principio del behavorial del main agent...");
                 if (!newGame) {//Waiting to hit "New" in GUI
                     ma.doWait();
                 }
                
-
+                 numerodepartidas = initnumerodepartidas;
                 for (int o = 0; o < listOfPlayers.size(); o++) { //
                     psi15_Player aux = listOfPlayers.get(o);
                     aux.resetGame();
@@ -142,23 +144,24 @@ public class psi15_mainAgent extends Agent {
                 needToReset = false;
                 newGame = true;
                 gameBeggined = true;
-
+                 for (int i = 0; i < players.size(); i++) {
+                            AID aidAux = null;
+                            aidAux = players.get(i);
+                            String message = "Id#" + i;
+                           // sleepAgent(10); //Sleeping the thread for no insta-games
+                            sendACL(ACLMessage.INFORM, aidAux, message,i);//Sending: ID#[Unique ID]
+                        }
                 for (int numpar = 0; numpar < numerodepartidas; numpar++) { //Numero de partidas
 
                     while (listOfPlayers.size() > 1) {//Mientras quede mas de 1 jugador
                         //Step 1
+                           sleepAgent(10); //Sleeping the thread for no insta-games
                         if (paused) {//Is it paused?
                             ma.doWait();
                             paused = false;
                         }
                         String turns = getTurns(); //Method to get turns using the IDList
-                        for (int i = 0; i < players.size(); i++) {
-                            AID aidAux = null;
-                            aidAux = players.get(i);
-                            String message = "Id#" + i;
-                            sleepAgent(500); //Sleeping the thread for no insta-games
-                            sendACL(ACLMessage.INFORM, aidAux, message);//Sending: ID#[Unique ID]
-                        }
+                       
 
                         //Step 2 //Request de las coins, generacion de los turnos
                         coinList = new ArrayList();
@@ -172,7 +175,7 @@ public class psi15_mainAgent extends Agent {
 
                             String message = "GetCoins#" + turns + "#";
                             int auxTurn = getTurn(playerID);
-                            sendACL(ACLMessage.REQUEST, players.get(i), message + auxTurn); //Esperamos la respuesta
+                            sendACL(ACLMessage.REQUEST, players.get(Integer.parseInt(IDList.get(i))), message + auxTurn,playerID); //Esperamos la respuesta
                             ACLMessage replay1 = blockingReceive();
                             int hisCoins = Integer.valueOf(replay1.getContent().split("#")[1]);//Cogemos la jugada
 
@@ -182,6 +185,7 @@ public class psi15_mainAgent extends Agent {
                         }
 
                         //Step 3 Ver las apuestas
+                    //    sleepAgent(10); //Sleeping the thread for no insta-games
                         if (paused) {//Is it paused?
                             ma.doWait();
                             paused = false;
@@ -189,7 +193,7 @@ public class psi15_mainAgent extends Agent {
                         //Empezamos con el primero
                         betList = new ArrayList();
                         String message1 = "GuessCoins#";
-                        sendACL(ACLMessage.REQUEST, players.get(Integer.parseInt(IDList.get(0))), message1); //cogemos el primero
+                        sendACL(ACLMessage.REQUEST, players.get(Integer.parseInt(IDList.get(0))), message1,Integer.parseInt(IDList.get(0))); //cogemos el primero
                         ACLMessage replay1 = blockingReceive();             //Esperamos a que vuelva la respuesta
                         String auxbet = replay1.getContent().split("#")[1]; //Cogemos la parte del mensaje que nos interesa
                         for (int i = 0; i < listOfPlayers.size(); i++) {             //Recorremos la lista de jugadores
@@ -207,7 +211,7 @@ public class psi15_mainAgent extends Agent {
                                 paused = false;
                             }
                             String message2 = "GuessCoins#" + String.join(",", betList);
-                            sendACL(ACLMessage.REQUEST, players.get(Integer.parseInt(IDList.get(i))), message2); //enviamos a sucesivos
+                            sendACL(ACLMessage.REQUEST, players.get(Integer.parseInt(IDList.get(i))), message2,Integer.parseInt(IDList.get(i)) ); //enviamos a sucesivos
                             ACLMessage replay2 = blockingReceive();
                             String auxbet2 = replay2.getContent().split("#")[1];
 
@@ -221,6 +225,7 @@ public class psi15_mainAgent extends Agent {
                             betList.add(auxbet2);
                         }
                         //Step 4: Comprobar el ganador
+                           sleepAgent(10); //Sleeping the thread for no insta-games
                         if (paused) {
                             ma.doWait();
                             paused = false;
@@ -230,11 +235,18 @@ public class psi15_mainAgent extends Agent {
                             resultado += Integer.parseInt(coinList.get(i)); //El resultado es la suma de los elementos de la coinList el cual contiene el numero de monedas escondidas por cada jugador
                         }
                         winner = comprobeWinner(); //metodo para comprobar cuale es el ganador
-                        if (winner == null) {               //Si no hay ganador consideramos empate
+                        if (winner == null) {     
+                            System.out.println("EMPATE--->");//Si no hay ganador consideramos empate
                             GUI.log("Empate-->");
                             draw++;
                             coinList = new ArrayList();
                            GUI.log("Apuestas:" + String.join(",", betList) + "Total de monedas=" + resultado+"\n");
+                            for (int i = 0; i < players.size(); i++) {
+
+                                String message = "Result#"+"#" + resultado + "#" + String.join(",", betList) + "#" + String.join(",", coinList); //Informamos del resultado a todos los jugadores
+
+                                sendACL(ACLMessage.INFORM, players.get(i), message,99);
+                            }
                         } else {                                   //Tenemos ganador
                             winner.win++;
                             GUI.actualizawins(winner); //Actualizamos la GUI
@@ -243,9 +255,15 @@ public class psi15_mainAgent extends Agent {
 
                                 String message = "Result#" + winner.getId() + "#" + resultado + "#" + String.join(",", betList) + "#" + String.join(",", coinList); //Informamos del resultado a todos los jugadores
 
-                                sendACL(ACLMessage.INFORM, players.get(i), message);
+                                sendACL(ACLMessage.INFORM, players.get(i), message,99);
                             }
-                            GUI.log("Hay ganador--> ID=" + winner.getId() + " Apuesta ganadora=" + resultado + " Lista de apuestas=" + String.join(",", betList) + " Lista de monedas=" + String.join(",", coinList) + "\n"); //LOG
+                            StringBuilder sb = new StringBuilder();
+for (String s : IDList)
+{
+    sb.append(s);
+    sb.append(",");
+}
+                            GUI.log("Hay ganador--> ID=" + winner.getId() + " Apuesta ganadora=" + resultado + " Lista de apuestas=" + String.join(",", betList) + " Lista de monedas=" + String.join(",", coinList) + " IDs--->"+ sb.toString()+" \n"); //LOG
                             if (listOfPlayers.size() == 1) {
                                 GUI.log("PERDEDOR ID#" + listOfPlayers.get(0).getId() + "\n"); //Cuando solo queda un jugador, hemos encontrado el looser. :(
                             }
@@ -335,7 +353,7 @@ public class psi15_mainAgent extends Agent {
    
 
     public void setNumberOfPlays(int play) { //Setter
-        numerodepartidas = play;
+        initnumerodepartidas = play;
     }
 
     public boolean areIPaused() { //getter
@@ -347,11 +365,11 @@ public class psi15_mainAgent extends Agent {
         ma.doWake();
     }
 
-    public void sendACL(int performative, AID receiver, String content) { //method for send the ACL message.
+    public void sendACL(int performative, AID receiver, String content,int id) { //method for send the ACL message.
         ACLMessage acl = new ACLMessage(performative);
         acl.addReceiver(receiver);
         acl.setContent(content);
-        System.out.println("SENDING: " + content);
+        System.out.println("SENDING: " + content+ " to ID:-----> " + id);
         send(acl);
     }
 

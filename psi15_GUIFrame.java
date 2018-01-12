@@ -1265,11 +1265,11 @@ public class psi15_GUIFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-       if(psi15_mainAgent.getInstance().numerodepartidas == 0){
+       if(psi15_mainAgent.getInstance().initnumerodepartidas == 0){
           GameFrame.append("\nERROR: El numero de partidas es 0. Seleccionelo y dele a new");
        }else{
         gamesPlayed.setText("0");
-        GameFrame.append("Starting new game... Number of games selected =" + psi15_mainAgent.getInstance().numerodepartidas + "\n");
+        GameFrame.append("Starting new game... Number of games selected =" + psi15_mainAgent.getInstance().initnumerodepartidas + "\n");
         gamesSelected.setText(String.valueOf(psi15_mainAgent.getInstance().numerodepartidas));
         StopMenuItem.setEnabled(true);
         for (int i = 0; i < 200; i++) {
