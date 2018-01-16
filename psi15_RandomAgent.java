@@ -101,7 +101,7 @@ private int myPay;
                                                           
                                                       }else if(message.startsWith("Result#")){
                                                           
-                                                          //TODO: Comprobar ganadores (Done in main)
+                                                       
                                                          
                                                       }
                                                       else{
